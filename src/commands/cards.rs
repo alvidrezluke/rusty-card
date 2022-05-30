@@ -63,7 +63,7 @@ pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
         ReactionType::from('➡'),
     ];
     let mut message = msg.channel_id.send_message(&ctx.http, |m| {
-        m.embed(|e| e.title(&inventory[0].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}", inventory[0].rarity, inventory[0].category, inventory[0].subcategory)).image(&inventory[0].image))
+        m.content(format!("{}/{}", card_index + 1, length + 1)).embed(|e| e.title(&inventory[0].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", inventory[0].rarity, inventory[0].category, inventory[0].subcategory), inventory[0].id).image(&inventory[0].image))
     }).await.expect("Failed to send message");
 
     let mut selection = interactions::reaction_prompt(ctx, &message, &msg.author, &emojis, 30.0).await?;
@@ -73,7 +73,7 @@ pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
         if index == 0 && card_index > 0 {
             card_index -= 1;
             message.edit(&ctx.http, |m| {
-                m.embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory)).image(&inventory[card_index].image))
+                m.content(format!("{}/{}", card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].id)).image(&inventory[card_index].image))
             }).await;
             message.delete_reactions(ctx).await;
             selection = interactions::reaction_prompt(ctx, &message, &msg.author, &emojis, 30.0).await?;
@@ -81,7 +81,7 @@ pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
         } else if index == 1 && card_index < length {
             card_index += 1;
             message.edit(&ctx.http, |m| {
-                m.embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory)).image(&inventory[card_index].image))
+                m.content(format!("{}/{}", card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].id)).image(&inventory[card_index].image))
             }).await;
             message.delete_reactions(ctx).await;
             selection = interactions::reaction_prompt(ctx, &message, &msg.author, &emojis, 30.0).await?;
