@@ -33,7 +33,7 @@ pub async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
         Ok(card) => {
             firebase::save_card(msg.author.id.to_string(), card.id).await;
             if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
-                m.embed(|e| e.title(card.name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}", card.rarity, card.category, card.subcategory)).image(card.image))
+                m.content(format!("{} rolled:", msg.author.mention())).embed(|e| e.title(card.name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}", card.rarity, card.category, card.subcategory)).image(card.image))
             }).await {
                 println!("Error sending message: {:?}", why);
             }
@@ -62,29 +62,50 @@ pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
         ReactionType::from('⬅'),
         ReactionType::from('➡'),
     ];
+    let forward_emoji = [
+        ReactionType::from('➡'),
+    ];
+    let backward_emoji = [
+        ReactionType::from('⬅'),
+    ];
     let mut message = msg.channel_id.send_message(&ctx.http, |m| {
-        m.content(format!("{}/{}", card_index + 1, length + 1)).embed(|e| e.title(&inventory[0].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", inventory[0].rarity, inventory[0].category, inventory[0].subcategory), inventory[0].id).image(&inventory[0].image))
+        m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[0].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", inventory[0].rarity, inventory[0].category, inventory[0].subcategory, inventory[0].id)).image(&inventory[0].image))
     }).await.expect("Failed to send message");
 
-    let mut selection = interactions::reaction_prompt(ctx, &message, &msg.author, &emojis, 30.0).await?;
+    let mut selection = interactions::reaction_prompt(ctx, &message, &msg.author, &forward_emoji, 30.0).await?;
+
+    let mut forward = true;
+    let mut backward = false;
 
     while !timer.is_zero() {
         let (index, _) = selection;
-        if index == 0 && card_index > 0 {
+        if (index == 0 && card_index > 0) || backward {
+            backward = false;
             card_index -= 1;
             message.edit(&ctx.http, |m| {
-                m.content(format!("{}/{}", card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].id)).image(&inventory[card_index].image))
+                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].id)).image(&inventory[card_index].image))
             }).await;
             message.delete_reactions(ctx).await;
-            selection = interactions::reaction_prompt(ctx, &message, &msg.author, &emojis, 30.0).await?;
+            if card_index == 0 {
+                selection = interactions::reaction_prompt(ctx, &message, &msg.author, &forward_emoji, 30.0).await?;
+                forward = true;
+            } else {
+                selection = interactions::reaction_prompt(ctx, &message, &msg.author, &emojis, 30.0).await?;
+            }
             timer = Duration::from_secs(300);
-        } else if index == 1 && card_index < length {
+        } else if (index == 1 && card_index < length) || forward {
+            forward = false;
             card_index += 1;
             message.edit(&ctx.http, |m| {
-                m.content(format!("{}/{}", card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].id)).image(&inventory[card_index].image))
+                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].id)).image(&inventory[card_index].image))
             }).await;
             message.delete_reactions(ctx).await;
-            selection = interactions::reaction_prompt(ctx, &message, &msg.author, &emojis, 30.0).await?;
+            if card_index == length {
+                selection = interactions::reaction_prompt(ctx, &message, &msg.author, &backward_emoji, 30.0).await?;
+                backward = true;
+            } else {
+                selection = interactions::reaction_prompt(ctx, &message, &msg.author, &emojis, 30.0).await?;
+            }
             timer = Duration::from_secs(300);
         }
     }   
