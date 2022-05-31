@@ -21,6 +21,7 @@
         pub subcategory: String,
         pub rarity: String,
         pub id: String,
+        pub quantity: u16,
     }
 
     fn rm_quotes(value: String) -> String {
@@ -51,89 +52,65 @@
             category: rolled_category,
             subcategory: rolled_subcategory,
             rarity: rolled_rarity,
-            id: rolled_id
+            id: rolled_id,
+            quantity: 1,
         };
         Ok(genCard)
     }
 
-    async fn create_user(id: String, card_id: String) -> Result<()> {
-        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users?documentId={user_id}", project_id = get_project_id(), user_id = id);
+    
 
-        let mut card = HashMap::new();
-        card.insert("stringValue", card_id);
-        let values = [card];
+    // async fn user_exists(id: String, card_id: String) -> bool {
+    //     let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = id);
 
-        let mut array_value = HashMap::new();
-        array_value.insert("values", values);
-        let mut cards = HashMap::new();
-        cards.insert("arrayValue", array_value);
-        let mut fields = HashMap::new();
-        fields.insert("cards", cards);
-        let mut map = HashMap::new();
-        map.insert("fields", fields);
+    //     let response = reqwest::get(request_url).await.unwrap();
+    //     let status = response.text().await.expect("Uh oh. 1");
+    //     let v: Value = serde_json::from_str(status.as_str()).expect("Uh oh. 2");
+    //     if v["error"]["code"] == 404 {
+    //         create_user(id, card_id).await;
+    //     } else {
+    //         add_card(id, card_id).await;
+    //     }
+    //     true
+    // }
+
+    // async fn add_card(user_id: String, card_id: String) -> Result<()> {
+    //     let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
+    //     let response = reqwest::get(&request_url).await.unwrap();
+    //     let status = response.text().await.expect("Uh oh. 1");
+    //     let v: Value = serde_json::from_str(status.as_str()).expect("Uh oh. 2");
+    //     let card = json!({
+    //         "stringValue": card_id
+    //     });
+    //     let mut newCards = v["fields"]["cards"]["arrayValue"]["values"].as_array().expect("Uh oh.").clone();
+    //     newCards.push(card);
+
+    //     let mut array_value = HashMap::new();
+    //     array_value.insert("values", newCards);
+    //     let mut cards = HashMap::new();
+    //     cards.insert("arrayValue", array_value);
+    //     let mut fields = HashMap::new();
+    //     fields.insert("cards", cards);
+    //     let mut map = HashMap::new();
+    //     map.insert("fields", fields);
+
+
+    //     let client = reqwest::Client::new();
+    //     let response = client.patch(&request_url)
+    //         .json(&map)
+    //         .send()
+    //         .await;
         
+    //     let status = response.expect("Uh oh.").text().await.expect("Uh oh. 1");
+    //     Ok(())
+    // }
 
-        let client = reqwest::Client::new();
-        let response = client.post(request_url)
-            .json(&map)
-            .send()
-            .await;
-        
-        let status = response.expect("Uh oh.").text().await.expect("Uh oh. 1");
-        Ok(())
-    }
+    // pub async fn save_card(user_id: String, card_id: String) -> Result<()> {
+    //     user_exists(user_id, card_id).await;
+    //     Ok(())
+    // }
 
-    async fn user_exists(id: String, card_id: String) -> bool {
-        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = id);
-
-        let response = reqwest::get(request_url).await.unwrap();
-        let status = response.text().await.expect("Uh oh. 1");
-        let v: Value = serde_json::from_str(status.as_str()).expect("Uh oh. 2");
-        if v["error"]["code"] == 404 {
-            create_user(id, card_id).await;
-        } else {
-            add_card(id, card_id).await;
-        }
-        true
-    }
-
-    async fn add_card(user_id: String, card_id: String) -> Result<()> {
-        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
-        let response = reqwest::get(&request_url).await.unwrap();
-        let status = response.text().await.expect("Uh oh. 1");
-        let v: Value = serde_json::from_str(status.as_str()).expect("Uh oh. 2");
-        let card = json!({
-            "stringValue": card_id
-        });
-        let mut newCards = v["fields"]["cards"]["arrayValue"]["values"].as_array().expect("Uh oh.").clone();
-        newCards.push(card);
-
-        let mut array_value = HashMap::new();
-        array_value.insert("values", newCards);
-        let mut cards = HashMap::new();
-        cards.insert("arrayValue", array_value);
-        let mut fields = HashMap::new();
-        fields.insert("cards", cards);
-        let mut map = HashMap::new();
-        map.insert("fields", fields);
-
-
-        let client = reqwest::Client::new();
-        let response = client.patch(&request_url)
-            .json(&map)
-            .send()
-            .await;
-        
-        let status = response.expect("Uh oh.").text().await.expect("Uh oh. 1");
-        Ok(())
-    }
-
-    pub async fn save_card(user_id: String, card_id: String) -> Result<()> {
-        user_exists(user_id, card_id).await;
-        Ok(())
-    }
-
-    async fn get_card(card_id: String) -> Result<GeneratedCard> {
+    async fn get_card(card_id: String, quantity: u16) -> Result<GeneratedCard> {
         let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/cards/{card_id}", project_id = get_project_id(), card_id = card_id);
         let response = reqwest::get(request_url).await.unwrap();
         let text = response.text().await.unwrap();
@@ -150,21 +127,156 @@
             category: rolled_category,
             subcategory: rolled_subcategory,
             rarity: rolled_rarity,
-            id: rolled_id
+            id: rolled_id,
+            quantity: quantity
         };
         Ok(genCard)
     }
 
     pub async fn fetch_inventory(user_id: String) -> Vec<GeneratedCard> {
-        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
-        let response = reqwest::get(&request_url).await.unwrap();
-        let status = response.text().await.expect("Uh oh. 1");
-        let v: Value = serde_json::from_str(status.as_str()).expect("Uh oh. 2");
-        let owned_cards = v["fields"]["cards"]["arrayValue"]["values"].as_array().unwrap().to_vec();
+        let owned_cards = get_user_cards(user_id).await.expect("No cards found");
+        if owned_cards.len() == 0 {
+            return vec![];
+        }
         let mut display_vec = vec![];
         for card in owned_cards {
-            let card_id = rm_quotes(card["stringValue"].to_string());
-            display_vec.push(get_card(card_id).await.expect("Card does not exist"));
+            display_vec.push(get_card(card.id, card.quantity).await.expect("Card does not exist"));
         }
         display_vec
+    }
+
+    struct CollectionCard {
+        id: String,
+        quantity: u16,
+        // name: String,
+        // category: String,
+        // subcategory: String,
+        // rarity: String,
+        // image: String
+    }
+
+    async fn get_user_cards(user_id: String) -> Result<Vec<CollectionCard>> {
+        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
+        let response = reqwest::get(&request_url).await.unwrap();
+        if response.status().is_client_error() {
+            return Ok(vec![]);
+        }
+        let status = response.text().await.expect("No cards found");
+        
+        let v: Value = serde_json::from_str(status.as_str()).expect("No valid JSON");
+        let owned_cards = v["fields"]["cards"]["arrayValue"]["values"].as_array().unwrap().to_vec();
+        let mut collection = vec![];
+
+        for card in owned_cards {
+            let card_id: String = rm_quotes(card["mapValue"]["fields"]["id"]["stringValue"].to_string());
+            let card_quantity = rm_quotes(card["mapValue"]["fields"]["quantity"]["stringValue"].to_string()).parse::<u16>().unwrap();
+            let collection_card = CollectionCard {
+                id: card_id,
+                quantity: card_quantity
+            };
+            collection.push(collection_card)
+        }
+        Ok(collection)
+    }
+
+    async fn create_user(id: String, json_value: Value) -> Result<()> {
+        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users?documentId={user_id}", project_id = get_project_id(), user_id = id);
+
+        let client = reqwest::Client::new();
+        let response = client.post(request_url)
+            .json(&json_value)
+            .send()
+            .await;
+        
+        let status = response.expect("Uh oh.").text().await.expect("Uh oh. 1");
+        Ok(())
+    }
+
+    pub async fn save_card(user_id: String, card_id: String) -> Result<()> {
+        let cards: Vec<CollectionCard> = get_user_cards(user_id.clone()).await?;
+        if cards.len() == 0 {
+            let json_data = json!({
+                "fields": {
+                    "cards": {
+                        "arrayValue": {
+                            "values": [
+                                {
+                                    "mapValue": {
+                                        "fields": {
+                                            "quantity": {
+                                                "stringValue": "1"
+                                            },
+                                            "id": {
+                                                "stringValue": card_id
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            });
+            create_user(user_id, json_data).await?;
+            return Ok(());
+        }
+        let mut new_cards = vec![];
+        let mut found = false;
+        for mut card in cards {
+            if card.id == card_id {
+                card.quantity += 1;
+                found = true;
+            }
+            let json_value = json!({
+                "mapValue": {
+                    "fields": {
+                        "quantity": {
+                            "stringValue": card.quantity.to_string()
+                        },
+                        "id": {
+                            "stringValue": card.id
+                        }
+                    }
+                }
+            });
+            new_cards.push(json_value);
+        }
+        if !found {
+            let json_value = json!({
+                "mapValue": {
+                    "fields": {
+                        "quantity": {
+                            "stringValue": "1"
+                        },
+                        "id": {
+                            "stringValue": card_id
+                        }
+                    }
+                }
+            });
+            new_cards.push(json_value);
+        }
+
+        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
+
+        let patch_data = json!({
+            "fields": {
+                "cards": {
+                    "arrayValue": {
+                        "values": new_cards.to_vec()
+                    }
+                }
+            }
+        });
+
+
+        let client = reqwest::Client::new();
+        let response = client.patch(&request_url)
+            .json(&patch_data)
+            .send()
+            .await;
+        
+        let status = response.expect("Uh oh.").text().await.expect("Uh oh. 1");
+
+        Ok(())
     }
