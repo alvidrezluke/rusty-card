@@ -27,6 +27,7 @@ pub async fn rick(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
+#[aliases("r")]
 pub async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
     let generatedCard = firebase::get_cards().await;
     match generatedCard {
@@ -48,11 +49,7 @@ pub async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-async fn r(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    roll(ctx, msg, args).await
-}
-
-#[command]
+#[aliases("i")]
 pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
     let inventory = firebase::fetch_inventory(msg.author.id.to_string()).await;
     let mut card_index = 0;
@@ -111,9 +108,3 @@ pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
     }   
     Ok(())
 }
-
-#[command]
-async fn i(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    inventory(ctx, msg, args).await
-}
-
