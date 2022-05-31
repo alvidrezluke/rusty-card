@@ -28,13 +28,16 @@ pub async fn rick(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 #[aliases("r")]
-pub async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
-    let generatedCard = firebase::get_cards().await;
+pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let passed_args = args.rest().to_string();
+    let mut split_args = passed_args.split_whitespace();
+    let mut category = split_args.next().unwrap().to_string().to_lowercase();
+    let generatedCard = firebase::get_cards(category).await;
     match generatedCard {
         Ok(card) => {
             firebase::save_card(msg.author.id.to_string(), card.id.clone()).await;
             if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
-                m.content(format!("{} rolled:", msg.author.mention())).embed(|e| e.title(card.name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", card.rarity, card.category, card.subcategory, card.id)).image(card.image))
+                m.content(format!("{} rolled:", msg.author.mention())).embed(|e| e.title(card.name).description(format!("Theme: {}\nCategory: {}\nSubcategory: {}\nID: {}", card.theme, card.category, card.subcategory, card.id)).image(card.image))
             }).await {
                 println!("Error sending message: {:?}", why);
             }
@@ -50,8 +53,11 @@ pub async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 #[aliases("i")]
-pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
-    let inventory = firebase::fetch_inventory(msg.author.id.to_string()).await;
+pub async fn inventory(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let passed_args = args.rest().to_string();
+    let mut split_args = passed_args.split_whitespace();
+    let category = split_args.next().unwrap().to_string();
+    let inventory = firebase::fetch_inventory(msg.author.id.to_string(), category).await;
     let mut card_index = 0;
     let mut timer = Duration::from_secs(300);
     let length = inventory.len() - 1;
@@ -66,7 +72,7 @@ pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
         ReactionType::from('⬅'),
     ];
     let mut message = msg.channel_id.send_message(&ctx.http, |m| {
-        m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[0].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nQuantity: {}\nID: {}", inventory[0].rarity, inventory[0].category, inventory[0].subcategory, inventory[0].quantity, inventory[0].id)).image(&inventory[0].image))
+        m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[0].name).description(format!("Theme: {}\nCategory: {}\nSubcategory: {}\nQuantity: {}\nID: {}", inventory[0].theme, inventory[0].category, inventory[0].subcategory, inventory[0].quantity, inventory[0].id)).image(&inventory[0].image))
     }).await.expect("Failed to send message");
 
     let mut selection = interactions::reaction_prompt(ctx, &message, &msg.author, &forward_emoji, 30.0).await?;
@@ -80,7 +86,7 @@ pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
             backward = false;
             card_index -= 1;
             message.edit(&ctx.http, |m| {
-                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nQuantity: {}\nID: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].quantity, &inventory[card_index].id)).image(&inventory[card_index].image))
+                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Theme: {}\nCategory: {}\nSubcategory: {}\nQuantity: {}\nID: {}", &inventory[card_index].theme, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].quantity, &inventory[card_index].id)).image(&inventory[card_index].image))
             }).await;
             message.delete_reactions(ctx).await;
             if card_index == 0 {
@@ -94,7 +100,7 @@ pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
             forward = false;
             card_index += 1;
             message.edit(&ctx.http, |m| {
-                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nQuantity: {}\nID: {}", &inventory[card_index].rarity, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].quantity, &inventory[card_index].id)).image(&inventory[card_index].image))
+                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("Theme: {}\nCategory: {}\nSubcategory: {}\nQuantity: {}\nID: {}", &inventory[card_index].theme, &inventory[card_index].category, &inventory[card_index].subcategory, &inventory[card_index].quantity, &inventory[card_index].id)).image(&inventory[card_index].image))
             }).await;
             message.delete_reactions(ctx).await;
             if card_index == length {

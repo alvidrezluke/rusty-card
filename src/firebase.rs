@@ -19,7 +19,7 @@
         pub image: String,
         pub category: String,
         pub subcategory: String,
-        pub rarity: String,
+        pub theme: String,
         pub id: String,
         pub quantity: u16,
     }
@@ -31,8 +31,8 @@
         chars.as_str().to_string()
     }
     
-    pub async fn get_cards() -> Result<GeneratedCard> {
-        let request_url = format!("https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/cards", project_id = get_project_id());
+    pub async fn get_cards(category: String) -> Result<GeneratedCard> {
+        let request_url = format!("https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/cards/{}/cards", get_project_id(), category);
 
         let response = reqwest::get(request_url).await.unwrap();
         let text = response.text().await.unwrap();
@@ -44,14 +44,14 @@
         let rolled_image = rm_quotes(v["documents"][index]["fields"]["image"]["stringValue"].to_string());
         let rolled_category = rm_quotes(v["documents"][index]["fields"]["category"]["stringValue"].to_string());
         let rolled_subcategory = rm_quotes(v["documents"][index]["fields"]["subcategory"]["stringValue"].to_string());
-        let rolled_rarity = rm_quotes(v["documents"][index]["fields"]["rarity"]["stringValue"].to_string());
+        let rolled_theme = rm_quotes(v["documents"][index]["fields"]["theme"]["stringValue"].to_string());
         let rolled_id = rm_quotes(v["documents"][index]["fields"]["id"]["stringValue"].to_string());
         let genCard = GeneratedCard {
             name: rolled_name,
             image: rolled_image,
             category: rolled_category,
             subcategory: rolled_subcategory,
-            rarity: rolled_rarity,
+            theme: rolled_theme,
             id: rolled_id,
             quantity: 1,
         };
@@ -110,8 +110,8 @@
     //     Ok(())
     // }
 
-    async fn get_card(card_id: String, quantity: u16) -> Result<GeneratedCard> {
-        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/cards/{card_id}", project_id = get_project_id(), card_id = card_id);
+    async fn get_card(card_id: String, quantity: u16, category: String) -> Result<GeneratedCard> {
+        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/cards/{category}/cards/{card_id}", project_id = get_project_id(), category = category, card_id = card_id);
         let response = reqwest::get(request_url).await.unwrap();
         let text = response.text().await.unwrap();
         let v: Value = serde_json::from_str(text.as_str())?;
@@ -119,28 +119,31 @@
         let rolled_image = rm_quotes(v["fields"]["image"]["stringValue"].to_string());
         let rolled_category = rm_quotes(v["fields"]["category"]["stringValue"].to_string());
         let rolled_subcategory = rm_quotes(v["fields"]["subcategory"]["stringValue"].to_string());
-        let rolled_rarity = rm_quotes(v["fields"]["rarity"]["stringValue"].to_string());
+        let rolled_theme = rm_quotes(v["fields"]["theme"]["stringValue"].to_string());
         let rolled_id = rm_quotes(v["fields"]["id"]["stringValue"].to_string());
         let genCard = GeneratedCard {
             name: rolled_name,
             image: rolled_image,
             category: rolled_category,
             subcategory: rolled_subcategory,
-            rarity: rolled_rarity,
+            theme: rolled_theme,
             id: rolled_id,
             quantity: quantity
         };
         Ok(genCard)
     }
 
-    pub async fn fetch_inventory(user_id: String) -> Vec<GeneratedCard> {
+    pub async fn fetch_inventory(user_id: String, category: String) -> Vec<GeneratedCard> {
         let owned_cards = get_user_cards(user_id).await.expect("No cards found");
         if owned_cards.len() == 0 {
             return vec![];
         }
         let mut display_vec = vec![];
         for card in owned_cards {
-            display_vec.push(get_card(card.id, card.quantity).await.expect("Card does not exist"));
+            let card_details = get_card(card.id, card.quantity, category.clone()).await.expect("Card does not exist");
+            if card_details.category.to_lowercase() == category {
+                display_vec.push(card_details);
+            }
         }
         display_vec
     }
@@ -151,7 +154,7 @@
         // name: String,
         // category: String,
         // subcategory: String,
-        // rarity: String,
+        // theme: String,
         // image: String
     }
 
