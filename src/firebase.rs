@@ -24,7 +24,7 @@
         pub quantity: u16,
     }
 
-    fn rm_quotes(value: String) -> String {
+    pub fn rm_quotes(value: String) -> String {
         let mut chars = value.chars();
         chars.next();
         chars.next_back();
@@ -278,5 +278,56 @@
         
         let status = response.expect("Uh oh.").text().await.expect("Uh oh. 1");
 
+        Ok(())
+    }
+
+    pub async fn trade_card(from_user_id: String, card_id: String, to_user_id: String) -> Result<()> {
+        let collection = get_user_cards(from_user_id.clone()).await?;
+        let mut short_collection = vec![];
+        let mut found = false;
+        for mut card in collection {
+            if card.id == card_id {
+                card.quantity -= 1;
+                found = true;
+            }
+            if card.quantity != 0 {
+                let json_value = json!({
+                    "mapValue": {
+                        "fields": {
+                            "quantity": {
+                                "stringValue": card.quantity.to_string()
+                            },
+                            "id": {
+                                "stringValue": card.id
+                            }
+                        }
+                    }
+                });
+                short_collection.push(json_value);
+            }
+        }
+        if !found {
+            println!("User does not have this card");
+            return Ok(());
+        }
+
+        let patch_data = json!({
+            "fields": {
+                "cards": {
+                    "arrayValue": {
+                        "values": short_collection.to_vec()
+                    }
+                }
+            }
+        });
+        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = from_user_id);
+        let client = reqwest::Client::new();
+        let response = client.patch(&request_url)
+            .json(&patch_data)
+            .send()
+            .await;
+        
+        let status = response.expect("Uh oh.").text().await.expect("Uh oh. 1");
+        save_card(to_user_id, card_id).await;
         Ok(())
     }

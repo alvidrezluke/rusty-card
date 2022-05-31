@@ -6,7 +6,7 @@ use serenity::model::prelude::*;
 use serenity::prelude::*;
 
 use crate::firebase;
-use crate::firebase::GeneratedCard;
+use crate::firebase::rm_quotes;
 use crate::interactions;
 use crate::error::Error;
 
@@ -106,5 +106,20 @@ pub async fn inventory(ctx: &Context, msg: &Message) -> CommandResult {
             timer = Duration::from_secs(300);
         }
     }   
+    Ok(())
+}
+
+#[command]
+#[aliases("t")]
+pub async fn trade(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+
+    let passed_args = args.rest().to_string();
+    let mut split_args = passed_args.split_whitespace();
+    let mut user_id = split_args.next().unwrap();
+    let user_id_len = user_id.len();
+    user_id = &user_id[2..user_id_len-1];
+    let card_id = split_args.next().unwrap();
+    let status = firebase::trade_card(msg.author.id.to_string(), card_id.to_string(), user_id.to_string()).await?;
+    msg.reply(&ctx, format!("Successfully transferred card: {}.", card_id)).await?;
     Ok(())
 }
