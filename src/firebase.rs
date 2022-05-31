@@ -18,7 +18,7 @@
         pub name: String,
         pub image: String,
         pub category: String,
-        pub subcategory: String,
+        pub set: String,
         pub theme: String,
         pub id: String,
         pub quantity: u16,
@@ -43,14 +43,14 @@
         let rolled_name = rm_quotes(v["documents"][index]["fields"]["name"]["stringValue"].to_string());
         let rolled_image = rm_quotes(v["documents"][index]["fields"]["image"]["stringValue"].to_string());
         let rolled_category = rm_quotes(v["documents"][index]["fields"]["category"]["stringValue"].to_string());
-        let rolled_subcategory = rm_quotes(v["documents"][index]["fields"]["subcategory"]["stringValue"].to_string());
+        let rolled_set = rm_quotes(v["documents"][index]["fields"]["set"]["stringValue"].to_string());
         let rolled_theme = rm_quotes(v["documents"][index]["fields"]["theme"]["stringValue"].to_string());
         let rolled_id = rm_quotes(v["documents"][index]["fields"]["id"]["stringValue"].to_string());
         let genCard = GeneratedCard {
             name: rolled_name,
             image: rolled_image,
             category: rolled_category,
-            subcategory: rolled_subcategory,
+            set: rolled_set,
             theme: rolled_theme,
             id: rolled_id,
             quantity: 1,
@@ -118,14 +118,14 @@
         let rolled_name = rm_quotes(v["fields"]["name"]["stringValue"].to_string());
         let rolled_image = rm_quotes(v["fields"]["image"]["stringValue"].to_string());
         let rolled_category = rm_quotes(v["fields"]["category"]["stringValue"].to_string());
-        let rolled_subcategory = rm_quotes(v["fields"]["subcategory"]["stringValue"].to_string());
+        let rolled_set = rm_quotes(v["fields"]["set"]["stringValue"].to_string());
         let rolled_theme = rm_quotes(v["fields"]["theme"]["stringValue"].to_string());
         let rolled_id = rm_quotes(v["fields"]["id"]["stringValue"].to_string());
         let genCard = GeneratedCard {
             name: rolled_name,
             image: rolled_image,
             category: rolled_category,
-            subcategory: rolled_subcategory,
+            set: rolled_set,
             theme: rolled_theme,
             id: rolled_id,
             quantity: quantity
@@ -153,7 +153,7 @@
         quantity: u16,
         // name: String,
         // category: String,
-        // subcategory: String,
+        // set: String,
         // theme: String,
         // image: String
     }
