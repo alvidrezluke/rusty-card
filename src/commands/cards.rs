@@ -31,7 +31,7 @@ pub async fn roll(ctx: &Context, msg: &Message) -> CommandResult {
     let generatedCard = firebase::get_cards().await;
     match generatedCard {
         Ok(card) => {
-            firebase::save_card(msg.author.id.to_string(), card.id).await;
+            firebase::save_card(msg.author.id.to_string(), card.id.clone()).await;
             if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
                 m.content(format!("{} rolled:", msg.author.mention())).embed(|e| e.title(card.name).description(format!("Rarity: {}\nCategory: {}\nSubcategory: {}\nID: {}", card.rarity, card.category, card.subcategory, card.id)).image(card.image))
             }).await {
