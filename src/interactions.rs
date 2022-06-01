@@ -55,3 +55,7 @@ pub async fn reaction_prompt(
 
     Err(Error::TimeoutError)
 }
+
+pub async fn send_error(ctx: &Context, msg: &Message, error_message: String) {
+    msg.channel_id.say(ctx.clone().http, error_message).await;
+}

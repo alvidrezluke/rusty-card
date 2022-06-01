@@ -51,6 +51,10 @@ pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     } else if posters_category_alternate.contains(&category) {
         category = "posters".to_string();
     }
+    if !(category == "characters" || category == "posters") {
+        interactions::send_error(ctx, msg, format!("Did not recognize category: {}. Valid categories include \"characters\" and \"posters\".", category)).await;
+        return Ok(());
+    }
     let generatedCard = firebase::get_cards(category).await;
     match generatedCard {
         Ok(card) => {
@@ -94,6 +98,10 @@ pub async fn inventory(ctx: &Context, msg: &Message, args: Args) -> CommandResul
         category = "characters".to_string();
     } else if posters_category_alternate.contains(&category) {
         category = "posters".to_string();
+    }
+    if !(category == "characters" || category == "posters") {
+        interactions::send_error(ctx, msg, format!("Did not recognize category: {}. Valid categories include \"characters\" and \"posters\".", category)).await;
+        return Ok(());
     }
     let inventory = firebase::fetch_inventory(msg.author.id.to_string(), category).await;
     let mut card_index = 0;
