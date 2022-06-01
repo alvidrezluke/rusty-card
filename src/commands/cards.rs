@@ -29,9 +29,28 @@ pub async fn rick(ctx: &Context, msg: &Message) -> CommandResult {
 #[command]
 #[aliases("r")]
 pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let character_category_alternate: Vec<String> = vec![
+        "characters".to_string(),
+        "character".to_string(),
+        "chars".to_string(),
+        "char".to_string(),
+        "c".to_string(),
+    ];
+
+    let posters_category_alternate: Vec<String> = vec![
+        "posters".to_string(),
+        "poster".to_string(),
+        "post".to_string(),
+        "p".to_string(),
+    ];
     let passed_args = args.rest().to_string();
     let mut split_args = passed_args.split_whitespace();
     let mut category = split_args.next().unwrap().to_string().to_lowercase();
+    if character_category_alternate.contains(&category) {
+        category = "characters".to_string();
+    } else if posters_category_alternate.contains(&category) {
+        category = "posters".to_string();
+    }
     let generatedCard = firebase::get_cards(category).await;
     match generatedCard {
         Ok(card) => {
@@ -54,9 +73,28 @@ pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 #[command]
 #[aliases("i")]
 pub async fn inventory(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
+    let character_category_alternate: Vec<String> = vec![
+        "characters".to_string(),
+        "character".to_string(),
+        "chars".to_string(),
+        "char".to_string(),
+        "c".to_string(),
+    ];
+
+    let posters_category_alternate: Vec<String> = vec![
+        "posters".to_string(),
+        "poster".to_string(),
+        "post".to_string(),
+        "p".to_string(),
+    ];
     let passed_args = args.rest().to_string();
     let mut split_args = passed_args.split_whitespace();
-    let category = split_args.next().unwrap().to_string();
+    let mut category = split_args.next().unwrap().to_string().to_lowercase();
+    if character_category_alternate.contains(&category) {
+        category = "characters".to_string();
+    } else if posters_category_alternate.contains(&category) {
+        category = "posters".to_string();
+    }
     let inventory = firebase::fetch_inventory(msg.author.id.to_string(), category).await;
     let mut card_index = 0;
     let mut timer = Duration::from_secs(300);
