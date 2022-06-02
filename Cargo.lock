@@ -204,18 +204,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "firebase-rs"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4460a4e0b7646c4d59a6896689a6dd1066fc814a50bc141d8ef8dee9cf7928f4"
-dependencies = [
- "reqwest",
- "serde",
- "serde_json",
- "url",
-]
-
-[[package]]
 name = "flate2"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -912,7 +900,6 @@ name = "rusty-cards"
 version = "0.1.0"
 dependencies = [
  "dotenv",
- "firebase-rs",
  "rand",
  "reqwest",
  "serde",
