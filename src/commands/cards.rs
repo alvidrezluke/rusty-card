@@ -170,7 +170,11 @@ pub async fn trade(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let user_id_len = user_id.len();
     user_id = &user_id[2..user_id_len-1];
     let card_id = split_args.next().unwrap();
-    let status = firebase::trade_card(msg.author.id.to_string(), card_id.to_string(), user_id.to_string()).await?;
+    let status = firebase::trade_card(msg.author.id.to_string(), card_id.to_string(), user_id.to_string()).await.clone();
+    if status.is_err() {
+        msg.reply(&ctx, format!("Error: {}", status.err().expect("Invalid Error"))).await?;
+        return Ok(());
+    }
     msg.reply(&ctx, format!("Successfully transferred card: {}.", card_id)).await?;
     Ok(())
 }
