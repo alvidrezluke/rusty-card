@@ -164,7 +164,6 @@ pub async fn inventory(ctx: &Context, msg: &Message, args: Args) -> CommandResul
 #[command]
 #[aliases("t")]
 pub async fn trade(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-
     let passed_args = args.rest().to_string();
     let mut split_args = passed_args.split_whitespace();
     let mut user_id = split_args.next().unwrap();
@@ -179,5 +178,6 @@ pub async fn trade(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 #[command]
 #[aliases("h")]
 pub async fn help (ctx: &Context, msg: &Message) -> CommandResult {
-    msg.reply(&ctx, "To roll a card use the command \"!roll (category)\". The current category options are characters or posters. You can view your inventory with \"!inventory (category)\"")
+    msg.reply(&ctx, "To roll a card use the command \"!roll (category)\". The current category options are characters or posters. You can view your inventory with \"!inventory (category)\"").await;
+    Ok(())
 }

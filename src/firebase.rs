@@ -1,5 +1,5 @@
     use serde::Deserialize;
-    use serde_json::{Result, Value, json};
+    use serde_json::{Value, json};
     use std::{env, collections::HashMap, thread, time};
     use rand::Rng;
     use std::time::Duration;
@@ -31,12 +31,16 @@
         chars.as_str().to_string()
     }
     
-    pub async fn get_cards(category: String) -> Result<GeneratedCard> {
+    pub async fn get_cards(category: String) -> Result<GeneratedCard, String> {
         let request_url = format!("https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/cards/{}/cards", get_project_id(), category);
 
         let response = reqwest::get(request_url).await.unwrap();
         let text = response.text().await.unwrap();
-        let v: Value = serde_json::from_str(text.as_str())?;
+        let json: Result<Value, _> = serde_json::from_str(text.as_str());
+        if json.is_err() {
+            return Err("You have no cards!".to_string());
+        }
+        let v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON.");
         let length = v["documents"].as_array().expect("Uh oh.").len();
         let mut rng = rand::thread_rng();
         let index: usize = rng.gen_range(0..length);
@@ -110,11 +114,11 @@
     //     Ok(())
     // }
 
-    async fn get_card(card_id: String, quantity: u16, category: String) -> Result<GeneratedCard> {
+    async fn get_card(card_id: String, quantity: u16, category: String) -> Result<GeneratedCard, ()> {
         let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/cards/{category}/cards/{card_id}", project_id = get_project_id(), category = category, card_id = card_id);
         let response = reqwest::get(request_url).await.unwrap();
         let text = response.text().await.unwrap();
-        let v: Value = serde_json::from_str(text.as_str())?;
+        let v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON from response.");
         let rolled_name = rm_quotes(v["fields"]["name"]["stringValue"].to_string());
         let rolled_image = rm_quotes(v["fields"]["image"]["stringValue"].to_string());
         let rolled_category = rm_quotes(v["fields"]["category"]["stringValue"].to_string());
@@ -158,7 +162,7 @@
         // image: String
     }
 
-    async fn get_user_cards(user_id: String) -> Result<Vec<CollectionCard>> {
+    async fn get_user_cards(user_id: String) -> Result<Vec<CollectionCard>, ()> {
         let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
         let response = reqwest::get(&request_url).await.unwrap();
         if response.status().is_client_error() {
@@ -182,7 +186,7 @@
         Ok(collection)
     }
 
-    async fn create_user(id: String, json_value: Value) -> Result<()> {
+    async fn create_user(id: String, json_value: Value) -> Result<(), ()> {
         let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users?documentId={user_id}", project_id = get_project_id(), user_id = id);
 
         let client = reqwest::Client::new();
@@ -195,7 +199,7 @@
         Ok(())
     }
 
-    pub async fn save_card(user_id: String, card_id: String) -> Result<()> {
+    pub async fn save_card(user_id: String, card_id: String) -> Result<(), ()> {
         let cards: Vec<CollectionCard> = get_user_cards(user_id.clone()).await?;
         if cards.len() == 0 {
             let json_data = json!({
@@ -284,8 +288,8 @@
         Ok(())
     }
 
-    pub async fn trade_card(from_user_id: String, card_id: String, to_user_id: String) -> Result<()> {
-        let collection = get_user_cards(from_user_id.clone()).await?;
+    pub async fn trade_card(from_user_id: String, card_id: String, to_user_id: String) -> Result<(), String> {
+        let collection = get_user_cards(from_user_id.clone()).await.expect("Failed to get user cards.");
         let mut short_collection = vec![];
         let mut found = false;
         for mut card in collection {
@@ -310,8 +314,7 @@
             }
         }
         if !found {
-            println!("User does not have this card");
-            return Ok(());
+            return Err("You do not have this card.".to_string());
         }
 
         if short_collection.to_vec().is_empty() {
