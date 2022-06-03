@@ -21,7 +21,7 @@
         pub set: String,
         pub theme: String,
         pub id: String,
-        pub quantity: u16,
+        pub quantity: u16
     }
 
     pub fn rm_quotes(value: String) -> String {
@@ -58,58 +58,6 @@
         };
         Ok(genCard)
     }
-
-    
-
-    // async fn user_exists(id: String, card_id: String) -> bool {
-    //     let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = id);
-
-    //     let response = reqwest::get(request_url).await.unwrap();
-    //     let status = response.text().await.expect("Uh oh. 1");
-    //     let v: Value = serde_json::from_str(status.as_str()).expect("Uh oh. 2");
-    //     if v["error"]["code"] == 404 {
-    //         create_user(id, card_id).await;
-    //     } else {
-    //         add_card(id, card_id).await;
-    //     }
-    //     true
-    // }
-
-    // async fn add_card(user_id: String, card_id: String) -> Result<()> {
-    //     let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
-    //     let response = reqwest::get(&request_url).await.unwrap();
-    //     let status = response.text().await.expect("Uh oh. 1");
-    //     let v: Value = serde_json::from_str(status.as_str()).expect("Uh oh. 2");
-    //     let card = json!({
-    //         "stringValue": card_id
-    //     });
-    //     let mut newCards = v["fields"]["cards"]["arrayValue"]["values"].as_array().expect("Uh oh.").clone();
-    //     newCards.push(card);
-
-    //     let mut array_value = HashMap::new();
-    //     array_value.insert("values", newCards);
-    //     let mut cards = HashMap::new();
-    //     cards.insert("arrayValue", array_value);
-    //     let mut fields = HashMap::new();
-    //     fields.insert("cards", cards);
-    //     let mut map = HashMap::new();
-    //     map.insert("fields", fields);
-
-
-    //     let client = reqwest::Client::new();
-    //     let response = client.patch(&request_url)
-    //         .json(&map)
-    //         .send()
-    //         .await;
-        
-    //     let status = response.expect("Uh oh.").text().await.expect("Uh oh. 1");
-    //     Ok(())
-    // }
-
-    // pub async fn save_card(user_id: String, card_id: String) -> Result<()> {
-    //     user_exists(user_id, card_id).await;
-    //     Ok(())
-    // }
 
     async fn get_card(card_id: String, quantity: u16, category: String) -> Result<GeneratedCard, ()> {
         let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/cards/{category}/cards/{card_id}", project_id = get_project_id(), category = category, card_id = card_id);
@@ -152,11 +100,6 @@
     struct CollectionCard {
         id: String,
         quantity: u16,
-        // name: String,
-        // category: String,
-        // set: String,
-        // theme: String,
-        // image: String
     }
 
     async fn get_user_cards(user_id: String) -> Result<Vec<CollectionCard>, ()> {

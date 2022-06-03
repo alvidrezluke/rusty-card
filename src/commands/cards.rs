@@ -45,7 +45,12 @@ pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     ];
     let passed_args = args.rest().to_string();
     let mut split_args = passed_args.split_whitespace();
-    let mut category = split_args.next().unwrap().to_string().to_lowercase();
+    let category_option = split_args.next();
+    if category_option.is_none() {
+        msg.reply(ctx, "You must supply a category when you use this function. Examples: c, characters, p, posters").await;
+        return Ok(());
+    }
+    let mut category = category_option.unwrap().to_string().to_lowercase();
     if character_category_alternate.contains(&category) {
         category = "characters".to_string();
     } else if posters_category_alternate.contains(&category) {
@@ -93,7 +98,12 @@ pub async fn inventory(ctx: &Context, msg: &Message, args: Args) -> CommandResul
     ];
     let passed_args = args.rest().to_string();
     let mut split_args = passed_args.split_whitespace();
-    let mut category = split_args.next().unwrap().to_string().to_lowercase();
+    let category_option = split_args.next();
+    if category_option.is_none() {
+        msg.reply(ctx, "You must supply a category when you use this function. Examples: c, characters, p, posters").await;
+        return Ok(());
+    }
+    let mut category = category_option.unwrap().to_string().to_lowercase();
     if character_category_alternate.contains(&category) {
         category = "characters".to_string();
     } else if posters_category_alternate.contains(&category) {
