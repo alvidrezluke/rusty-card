@@ -175,3 +175,9 @@ pub async fn trade(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     msg.reply(&ctx, format!("Successfully transferred card: {}.", card_id)).await?;
     Ok(())
 }
+
+#[command]
+#[aliases("h")]
+pub async fn help (ctx: &Context, msg: &Message) -> CommandResult {
+    msg.reply(&ctx, "To roll a card use the command \"!roll (category)\". The current category options are characters or posters. You can view your inventory with \"!inventory (category)\"")
+}
