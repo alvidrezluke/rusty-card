@@ -2,6 +2,8 @@ mod commands;
 mod firebase;
 mod interactions;
 mod error;
+mod misc;
+mod config;
 
 use std::collections::HashSet;
 use std::env;
