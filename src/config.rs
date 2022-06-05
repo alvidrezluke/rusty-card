@@ -1,4 +1,4 @@
-pub static character_category_alternates: [&str; 5] = [
+pub static CHARACTERSCATEGORYALTERNATES: [&str; 5] = [
     "characters",
     "character",
     "chars",
@@ -6,11 +6,13 @@ pub static character_category_alternates: [&str; 5] = [
     "c",
 ];
 
-pub static posters_category_alternates: [&str; 4] = [
+pub static POSTERSCATEGORYALTERNATES: [&str; 4] = [
     "posters",
     "poster",
     "post",
     "p",
 ];
 
-pub static roll_time: i64 = 15;
+pub static ROLLTIME: i64 = 15;
+
+pub static INVTIME: i64 = 5;
