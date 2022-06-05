@@ -1,7 +1,6 @@
 mod commands;
 mod firebase;
 mod interactions;
-mod error;
 mod misc;
 mod config;
 
@@ -20,7 +19,6 @@ use serenity::prelude::*;
 use tracing::{error, info};
 
 use crate::commands::cards::*;
-use crate::commands::owner::*;
 
 pub struct ShardManagerContainer;
 

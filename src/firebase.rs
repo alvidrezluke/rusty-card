@@ -321,9 +321,8 @@ pub async fn check_roll_time(user_id: String) -> Result<bool, String> {
 }
 
 async fn update_roll_time(user_id: String) -> Result<(), String> {
-    let request_url = format!("https://firestore.googleapis.com/v1beta1/projects/{project_id}/databases/(default)/documets/users/{user_id}?updateMask.fieldPaths=last_rolled&alt=json", project_id = get_project_id(), user_id = user_id);
+    let request_url = format!("https://firestore.googleapis.com/v1beta1/projects/{project_id}/databases/(default)/documents/users/{user_id}?updateMask.fieldPaths=last_rolled&alt=json", project_id = get_project_id(), user_id = user_id);
     let current_time = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
-    println!("{}", current_time);
     let data = json!({
         "fields": {
             "last_rolled": {

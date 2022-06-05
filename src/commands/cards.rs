@@ -6,9 +6,7 @@ use serenity::model::prelude::*;
 use serenity::prelude::*;
 
 use crate::firebase;
-use crate::firebase::rm_quotes;
 use crate::interactions;
-use crate::error::Error;
 use crate::misc;
 
 #[command]
@@ -27,27 +25,26 @@ pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     let mut split_args = passed_args.split_whitespace();
     let category_option = split_args.next();
     if category_option.is_none() {
-        msg.reply(ctx, "You must supply a category when you use this function. Examples: c, characters, p, posters").await;
+        msg.reply(ctx, "You must supply a category when you use this function. Examples: c, characters, p, posters").await?;
         return Ok(());
     }
 
     //  Parse category from string
-    let mut category_result = misc::get_category(category_option.unwrap().to_string().to_lowercase());
-    let mut category = "".to_string();
-    match category_result {
+    let category_result = misc::get_category(category_option.unwrap().to_string().to_lowercase());
+    let category: String = match category_result {
         Ok(s) => {
-            category = s;
+            s
         },
         Err(e) => {
-            interactions::send_error(ctx, msg, e).await;
+            interactions::send_error(ctx, msg, e).await?;
             return Ok(());
         }
-    }
+    };
 
     // Check for duration
     let checked_time = firebase::check_roll_time(msg.author.id.to_string()).await.expect("Failed to get last rolled time.");
     if !checked_time {
-        msg.reply(ctx, "You can only roll once every 15 minutes!").await;
+        msg.reply(ctx, "You can only roll once every 15 minutes!").await?;
         return Ok(());
     }
 
@@ -57,21 +54,17 @@ pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     //  Send the rolled card to the user
     match generated_card {
         Ok(card) => {
-            firebase::save_card(msg.author.id.to_string(), card.id.clone()).await;
-            println!("Link: {}\nImage: {}", card.link, card.image);
-
-            if card.link == "" {
+            let _saved_status = firebase::save_card(msg.author.id.to_string(), card.id.clone()).await;
+            if card.link.is_empty() {
                 if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
                     m.content(format!("{} rolled:", msg.author.mention())).embed(|e| e.title(card.name).description(format!("{}", card.set)).footer(|f| f.text(format!("{} - ID: {}", card.theme, card.id))).image(card.image))
                 }).await {
                     println!("Error sending message: {:?}", why);
                 }
             } else {
-                if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
+                msg.channel_id.send_message(&ctx.http, |m| {
                     m.content(format!("{} rolled:", msg.author.mention())).embed(|e| e.title(card.name).url(card.link).description(format!("{}", card.set)).footer(|f| f.text(format!("{} - ID: {}", card.theme, card.id))).image(card.image))
-                }).await {
-                    println!("Error sending message: {:?}", why);
-                }
+                }).await?;
             }
         },
         Err(e) => {
