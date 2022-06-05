@@ -40,7 +40,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(roll, inventory, rick, trade, help)]
+#[commands(roll, inventory, trade, help)]
 struct General;
 
 #[tokio::main]
