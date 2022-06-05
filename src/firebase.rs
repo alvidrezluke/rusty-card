@@ -21,7 +21,8 @@ pub struct GeneratedCard {
     pub set: String,
     pub theme: String,
     pub id: String,
-    pub quantity: u16
+    pub quantity: u16,
+    pub link: String
 }
 
 pub fn rm_quotes(value: String) -> String {
@@ -47,7 +48,11 @@ pub async fn get_cards(category: String) -> Result<GeneratedCard, String> {
     let rolled_set = rm_quotes(v["documents"][index]["fields"]["set"]["stringValue"].to_string());
     let rolled_theme = rm_quotes(v["documents"][index]["fields"]["theme"]["stringValue"].to_string());
     let rolled_id = rm_quotes(v["documents"][index]["fields"]["id"]["stringValue"].to_string());
-    let genCard = GeneratedCard {
+    let mut rolled_link = "".to_string();
+    if !(rm_quotes(v["documents"][index]["fields"]["link"]["stringValue"].to_string()) == "ul") {
+        rolled_link = rm_quotes(v["fields"]["link"]["stringValue"].to_string());
+    };
+    let gen_card = GeneratedCard {
         name: rolled_name,
         image: rolled_image,
         category: rolled_category,
@@ -55,8 +60,9 @@ pub async fn get_cards(category: String) -> Result<GeneratedCard, String> {
         theme: rolled_theme,
         id: rolled_id,
         quantity: 1,
+        link: rolled_link
     };
-    Ok(genCard)
+    Ok(gen_card)
 }
 
 async fn get_card(card_id: String, quantity: u16, category: String) -> Result<GeneratedCard, ()> {
@@ -70,16 +76,21 @@ async fn get_card(card_id: String, quantity: u16, category: String) -> Result<Ge
     let rolled_set = rm_quotes(v["fields"]["set"]["stringValue"].to_string());
     let rolled_theme = rm_quotes(v["fields"]["theme"]["stringValue"].to_string());
     let rolled_id = rm_quotes(v["fields"]["id"]["stringValue"].to_string());
-    let genCard = GeneratedCard {
+    let mut rolled_link= "".to_string();
+    if !(rm_quotes(v["fields"]["link"]["stringValue"].to_string()) == "ul") {
+        rolled_link = rm_quotes(v["fields"]["link"]["stringValue"].to_string());
+    };
+    let gen_card = GeneratedCard {
         name: rolled_name,
         image: rolled_image,
         category: rolled_category,
         set: rolled_set,
         theme: rolled_theme,
         id: rolled_id,
-        quantity: quantity
+        quantity,
+        link: rolled_link
     };
-    Ok(genCard)
+    Ok(gen_card)
 }
 
 pub async fn fetch_inventory(user_id: String, category: String) -> Vec<GeneratedCard> {

@@ -65,7 +65,7 @@ pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         Ok(card) => {
             firebase::save_card(msg.author.id.to_string(), card.id.clone()).await;
             if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
-                m.content(format!("{} rolled:", msg.author.mention())).embed(|e| e.title(card.name).description(format!("{}", card.set)).footer(|f| f.text(format!("{} - ID: {}", card.theme, card.id))).image(card.image))
+                m.content(format!("{} rolled:", msg.author.mention())).embed(|e| e.title(card.name).description(format!("{}", card.set)).footer(|f| f.text(format!("{} - ID: {}\n{}", card.theme, card.id, card.link))).image(card.image))
             }).await {
                 println!("Error sending message: {:?}", why);
             }
@@ -128,7 +128,7 @@ pub async fn inventory(ctx: &Context, msg: &Message, args: Args) -> CommandResul
         ReactionType::from('⬅'),
     ];
     let mut message = msg.channel_id.send_message(&ctx.http, |m| {
-        m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[0].name).description(format!("{}", inventory[0].set)).footer(|f| f.text(format!("{} - ID: {} - Quantity: {}", inventory[0].theme, inventory[0].id, inventory[0].quantity))).image(&inventory[0].image))
+        m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[0].name).description(format!("{}", inventory[0].set)).footer(|f| f.text(format!("{} - ID: {} - Quantity: {}\n{}", inventory[0].theme, inventory[0].id, inventory[0].quantity, inventory[0].link))).image(&inventory[0].image))
     }).await.expect("Failed to send message");
 
     let mut selection = interactions::reaction_prompt(ctx, &message, &msg.author, &forward_emoji, 30.0).await?;
@@ -142,7 +142,7 @@ pub async fn inventory(ctx: &Context, msg: &Message, args: Args) -> CommandResul
             backward = false;
             card_index -= 1;
             message.edit(&ctx.http, |m| {
-                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("{}", &inventory[card_index].set)).footer(|f| f.text(format!("{} - ID: {} - Quantity: {}", &inventory[card_index].theme, &inventory[card_index].id, &inventory[card_index].quantity))).image(&inventory[card_index].image))
+                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("{}", &inventory[card_index].set)).footer(|f| f.text(format!("{} - ID: {} - Quantity: {}\n{}", &inventory[card_index].theme, &inventory[card_index].id, &inventory[card_index].quantity, &inventory[card_index].link))).image(&inventory[card_index].image))
             }).await;
             message.delete_reactions(ctx).await;
             if card_index == 0 {
@@ -156,7 +156,7 @@ pub async fn inventory(ctx: &Context, msg: &Message, args: Args) -> CommandResul
             forward = false;
             card_index += 1;
             message.edit(&ctx.http, |m| {
-                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("{}", &inventory[card_index].set)).footer(|f| f.text(format!("{} - ID: {} - Quantity: {}", &inventory[card_index].theme, &inventory[card_index].id, &inventory[card_index].quantity))).image(&inventory[card_index].image))
+                m.content(format!("{}'s inventory: Card {}/{}", msg.author.mention(), card_index + 1, length + 1)).embed(|e| e.title(&inventory[card_index].name).description(format!("{}", &inventory[card_index].set)).footer(|f| f.text(format!("{} - ID: {} - Quantity: {}\n{}", &inventory[card_index].theme, &inventory[card_index].id, &inventory[card_index].quantity, &inventory[card_index].link))).image(&inventory[card_index].image))
             }).await;
             message.delete_reactions(ctx).await;
             if card_index == length {
