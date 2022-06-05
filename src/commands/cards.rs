@@ -9,40 +9,20 @@ use crate::firebase;
 use crate::firebase::rm_quotes;
 use crate::interactions;
 use crate::error::Error;
-
-#[command]
-pub async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
-    msg.channel_id.say(&ctx.http, "Pong!").await?;
-
-    Ok(())
-}
+use crate::misc;
 
 #[command]
 pub async fn rick(ctx: &Context, msg: &Message) -> CommandResult {
     msg.channel_id.send_message(&ctx.http, |m| {
         m.embed(|e| e.image("https://firebasestorage.googleapis.com/v0/b/rusty-cards.appspot.com/o/rickroll-roll.gif?alt=media&token=269ee9e8-eba9-4cc3-8caf-93f554e07c4c"))
     }).await?;
-
     Ok(())
 }
 
 #[command]
 #[aliases("r")]
 pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
-    let character_category_alternate: Vec<String> = vec![
-        "characters".to_string(),
-        "character".to_string(),
-        "chars".to_string(),
-        "char".to_string(),
-        "c".to_string(),
-    ];
-
-    let posters_category_alternate: Vec<String> = vec![
-        "posters".to_string(),
-        "poster".to_string(),
-        "post".to_string(),
-        "p".to_string(),
-    ];
+    //  Parse args
     let passed_args = args.rest().to_string();
     let mut split_args = passed_args.split_whitespace();
     let category_option = split_args.next();
@@ -50,20 +30,35 @@ pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
         msg.reply(ctx, "You must supply a category when you use this function. Examples: c, characters, p, posters").await;
         return Ok(());
     }
-    let mut category = category_option.unwrap().to_string().to_lowercase();
-    if character_category_alternate.contains(&category) {
-        category = "characters".to_string();
-    } else if posters_category_alternate.contains(&category) {
-        category = "posters".to_string();
+
+    //  Parse category from string
+    let mut category_result = misc::get_category(category_option.unwrap().to_string().to_lowercase());
+    let mut category = "".to_string();
+    match category_result {
+        Ok(s) => {
+            category = s;
+        },
+        Err(e) => {
+            interactions::send_error(ctx, msg, e).await;
+            return Ok(());
+        }
     }
-    if !(category == "characters" || category == "posters") {
-        interactions::send_error(ctx, msg, format!("Did not recognize category: {}. Valid categories include \"characters\" and \"posters\".", category)).await;
+
+    // Check for duration
+    let checked_time = firebase::check_roll_time(msg.author.id.to_string()).await.expect("Failed to get last rolled time.");
+    if !checked_time {
+        msg.reply(ctx, "You can only roll once every 15 minutes!").await;
         return Ok(());
     }
-    let generatedCard = firebase::get_cards(category).await;
-    match generatedCard {
+
+    //  Get cards of that category
+    let generated_card = firebase::get_cards(category).await;
+
+    //  Send the rolled card to the user
+    match generated_card {
         Ok(card) => {
             firebase::save_card(msg.author.id.to_string(), card.id.clone()).await;
+            println!("Link: {}\nImage: {}", card.link, card.image);
 
             if card.link == "" {
                 if let Err(why) = msg.channel_id.send_message(&ctx.http, |m| {
@@ -78,7 +73,6 @@ pub async fn roll(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
                     println!("Error sending message: {:?}", why);
                 }
             }
-            
         },
         Err(e) => {
             if let Err(why) = msg.channel_id.say(&ctx.http, format!("Error: {}", e)).await {
