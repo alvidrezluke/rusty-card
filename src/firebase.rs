@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::env;
-use rand::Rng;
+use rand::{Rng, prelude::SliceRandom, SeedableRng};
 use chrono::{Utc, TimeZone, Duration};
 
 use crate::config;
@@ -39,15 +39,18 @@ pub async fn get_cards(category: String) -> Result<GeneratedCard, String> {
     let text = response.text().await.unwrap();
     let v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON.");
     let length = v["documents"].as_array().expect("Uh oh.").len();
-    let mut rng = rand::thread_rng();
-    let index: usize = rng.gen_range(0..length);
-    let rolled_name = rm_quotes(v["documents"][index]["fields"]["name"]["stringValue"].to_string());
-    let rolled_image = rm_quotes(v["documents"][index]["fields"]["image"]["stringValue"].to_string());
-    let rolled_category = rm_quotes(v["documents"][index]["fields"]["category"]["stringValue"].to_string());
-    let rolled_set = rm_quotes(v["documents"][index]["fields"]["set"]["stringValue"].to_string());
-    let rolled_theme = rm_quotes(v["documents"][index]["fields"]["theme"]["stringValue"].to_string());
-    let rolled_id = rm_quotes(v["documents"][index]["fields"]["id"]["stringValue"].to_string());
-    let mut rolled_link = rm_quotes(v["documents"][index]["fields"]["link"]["stringValue"].to_string());
+    // let mut rng = rand::thread_rng();
+    // let index: usize = rng.gen_range(0..length);
+    // println!("{:?}", index);
+    let array = v["documents"].as_array().expect("Not an array");
+    let slice = array.choose(&mut rand::rngs::StdRng::from_entropy()).expect("Could not pick random number");
+    let rolled_name = rm_quotes(slice["fields"]["name"]["stringValue"].to_string());
+    let rolled_image = rm_quotes(slice["fields"]["image"]["stringValue"].to_string());
+    let rolled_category = rm_quotes(slice["fields"]["category"]["stringValue"].to_string());
+    let rolled_set = rm_quotes(slice["fields"]["set"]["stringValue"].to_string());
+    let rolled_theme = rm_quotes(slice["fields"]["theme"]["stringValue"].to_string());
+    let rolled_id = rm_quotes(slice["fields"]["id"]["stringValue"].to_string());
+    let mut rolled_link = rm_quotes(slice["fields"]["link"]["stringValue"].to_string());
     if rolled_link == "ul" {
         rolled_link = String::new();
     }
