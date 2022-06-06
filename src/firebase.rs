@@ -34,7 +34,7 @@ pub fn rm_quotes(value: String) -> String {
 }
     
 pub async fn get_cards(category: String) -> Result<GeneratedCard, String> {
-    let request_url = format!("https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/cards/{}/cards?access_token={}", get_project_id(), category, get_token());
+    let request_url = format!("https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/cards/{}/cards", get_project_id(), category);
     let response = reqwest::get(request_url).await.unwrap();
     let text = response.text().await.unwrap();
     let v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON.");
@@ -65,7 +65,7 @@ pub async fn get_cards(category: String) -> Result<GeneratedCard, String> {
 }
 
 pub async fn get_card(card_id: String, quantity: u16, category: String) -> Result<GeneratedCard, ()> {
-    let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/cards/{category}/cards/{card_id}?access_token={access_token}", project_id = get_project_id(), category = category, card_id = card_id, access_token = get_token());
+    let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/cards/{category}/cards/{card_id}", project_id = get_project_id(), category = category, card_id = card_id);
     let response = reqwest::get(request_url).await.unwrap();
     let text = response.text().await.unwrap();
     let v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON from response.");
@@ -113,7 +113,7 @@ struct CollectionCard {
 }
 
 async fn get_user_cards(user_id: String) -> Result<Vec<CollectionCard>, ()> {
-    let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}?access_token={access_token}", project_id = get_project_id(), user_id = user_id, access_token = get_token());
+    let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
     let response = reqwest::get(&request_url).await.unwrap();
     if response.status().is_client_error() {
         return Ok(vec![]);
@@ -137,7 +137,7 @@ async fn get_user_cards(user_id: String) -> Result<Vec<CollectionCard>, ()> {
 }
 
 async fn create_user(id: String, json_value: Value) -> Result<(), ()> {
-        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users?documentId={user_id}&access_token={access_token}", project_id = get_project_id(), user_id = id, access_token = get_token());
+        let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users?documentId={user_id}", project_id = get_project_id(), user_id = id);
 
         let client = reqwest::Client::new();
         let response = client.post(request_url)
@@ -221,7 +221,7 @@ pub async fn save_card(user_id: String, card_id: String) -> Result<(), ()> {
         });
         new_cards.push(json_value);
     }
-    let request_url = format!("https://firestore.googleapis.com/v1beta1/projects/{project_id}/databases/(default)/documents/users/{user_id}?updateMask.fieldPaths=cards&access_token={access_token}", project_id = get_project_id(), user_id = user_id, access_token = get_token());
+    let request_url = format!("https://firestore.googleapis.com/v1beta1/projects/{project_id}/databases/(default)/documents/users/{user_id}?updateMask.fieldPaths=cards", project_id = get_project_id(), user_id = user_id);
 
     let patch_data = json!({
         "fields": {
@@ -272,7 +272,7 @@ pub async fn trade_card(from_user_id: String, card_id: String, to_user_id: Strin
     }
     if found {
         if short_collection.to_vec().is_empty() {
-            let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}?access_token={access_token}", project_id = get_project_id(), user_id = from_user_id, access_token = get_token());
+            let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = from_user_id);
             let client = reqwest::Client::new();
             let response = client.delete(&request_url).send().await;
             response.expect("Failed to delete user");
@@ -286,7 +286,7 @@ pub async fn trade_card(from_user_id: String, card_id: String, to_user_id: Strin
                     }
                 }
             });
-            let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}?access_token={access_token}", project_id = get_project_id(), user_id = from_user_id, access_token = get_token());
+            let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = from_user_id);
             let client = reqwest::Client::new();
             let response = client.patch(&request_url)
                 .json(&patch_data)
@@ -303,7 +303,7 @@ pub async fn trade_card(from_user_id: String, card_id: String, to_user_id: Strin
 }
 
 pub async fn check_roll_time(user_id: String) -> Result<bool, String> {
-    let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}?access_token={access_token}", project_id = get_project_id(), user_id = user_id, access_token = get_token());
+    let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
     let response = reqwest::get(request_url).await.unwrap();
     let text = response.text().await.unwrap();
     let v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON from response.");
@@ -325,7 +325,7 @@ pub async fn check_roll_time(user_id: String) -> Result<bool, String> {
 }
 
 async fn update_roll_time(user_id: String) -> Result<(), String> {
-    let request_url = format!("https://firestore.googleapis.com/v1beta1/projects/{project_id}/databases/(default)/documents/users/{user_id}?updateMask.fieldPaths=last_rolled&alt=json&access_token={access_token}", project_id = get_project_id(), user_id = user_id, access_token = get_token());
+    let request_url = format!("https://firestore.googleapis.com/v1beta1/projects/{project_id}/databases/(default)/documents/users/{user_id}?updateMask.fieldPaths=last_rolled&alt=json", project_id = get_project_id(), user_id = user_id);
     let current_time = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
     let data = json!({
         "fields": {
@@ -346,7 +346,7 @@ async fn update_roll_time(user_id: String) -> Result<(), String> {
 }
 
 pub async fn check_inventory_time(user_id: String) -> Result<bool, String> {
-    let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}?access_token={access_token}", project_id = get_project_id(), user_id = user_id, access_token = get_token());
+    let request_url = format!("https://firestore.googleapis.com/v1/projects/{project_id}/databases/(default)/documents/users/{user_id}", project_id = get_project_id(), user_id = user_id);
     let response = reqwest::get(request_url).await.unwrap();
     let text = response.text().await.unwrap();
     let v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON from response.");
@@ -368,7 +368,7 @@ pub async fn check_inventory_time(user_id: String) -> Result<bool, String> {
 }
 
 async fn update_inventory_time(user_id: String) -> Result<(), String> {
-    let request_url = format!("https://firestore.googleapis.com/v1beta1/projects/{project_id}/databases/(default)/documents/users/{user_id}?updateMask.fieldPaths=last_inventory&alt=json&access_token={access_token}", project_id = get_project_id(), user_id = user_id, access_token = get_token());
+    let request_url = format!("https://firestore.googleapis.com/v1beta1/projects/{project_id}/databases/(default)/documents/users/{user_id}?updateMask.fieldPaths=last_inventory&alt=json", project_id = get_project_id(), user_id = user_id);
     let current_time = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
     let data = json!({
         "fields": {
