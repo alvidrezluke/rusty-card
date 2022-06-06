@@ -46,9 +46,10 @@ struct General;
 #[tokio::main]
 async fn main() {
     let env = dotenv::dotenv();
+    let mut prefix = "!";
     match env {
         Ok(_) => {
-
+            prefix = "~";
         },
         Err(_) => {
             println!("Could not read dotenv file");
@@ -70,7 +71,7 @@ async fn main() {
         Err(why) => panic!("Could not access application info: {:?}", why),
     };
 
-    let framework = StandardFramework::new().configure(|c| c.owners(owners).prefix("~")).group(&GENERAL_GROUP);
+    let framework = StandardFramework::new().configure(|c| c.owners(owners).prefix(prefix)).group(&GENERAL_GROUP);
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
