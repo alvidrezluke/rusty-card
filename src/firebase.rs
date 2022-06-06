@@ -34,15 +34,20 @@ pub fn rm_quotes(value: String) -> String {
 }
     
 pub async fn get_cards(category: String) -> Result<GeneratedCard, String> {
-    let request_url = format!("https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/cards/{}/cards", get_project_id(), category);
-    let response = reqwest::get(request_url).await.unwrap();
-    let text = response.text().await.unwrap();
-    let v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON.");
-    let length = v["documents"].as_array().expect("Uh oh.").len();
-    // let mut rng = rand::thread_rng();
-    // let index: usize = rng.gen_range(0..length);
-    // println!("{:?}", index);
-    let array = v["documents"].as_array().expect("Not an array");
+    let mut request_url = format!("https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/cards/{}/cards", get_project_id(), category);
+    let mut response = reqwest::get(request_url).await.unwrap();
+    let mut text = response.text().await.unwrap();
+    let mut v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON.");
+    let array: &mut Vec<Value> = &mut v["documents"].as_array().expect("Not an array").to_owned();
+    while v["nextPageToken"].is_string() {
+        request_url = format!("https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/cards/{}/cards?pageToken={}", get_project_id(), category, v["nextPageToken"].as_str().unwrap());
+        response = reqwest::get(request_url).await.unwrap();
+        text = response.text().await.unwrap();
+        v = serde_json::from_str(text.as_str()).expect("Failed to parse JSON.");
+        let mut new_array = v["documents"].as_array().expect("Not an array while loop").to_owned();
+        array.append(&mut new_array);
+    }
+    let length = array.len();
     let slice = array.choose(&mut rand::rngs::StdRng::from_entropy()).expect("Could not pick random number");
     let rolled_name = rm_quotes(slice["fields"]["name"]["stringValue"].to_string());
     let rolled_image = rm_quotes(slice["fields"]["image"]["stringValue"].to_string());
@@ -314,8 +319,8 @@ pub async fn check_roll_time(user_id: String) -> Result<bool, String> {
     if raw_date == "ul" {
         return Ok(true);
     }
-    let last_rolled = Utc.datetime_from_str(raw_date.as_str(), "%Y-%m-%dT%H:%M:%SZ").expect("Invalid date").time();
-    let current_time = Utc::now().time();
+    let last_rolled = Utc.datetime_from_str(raw_date.as_str(), "%Y-%m-%dT%H:%M:%SZ").expect("Invalid date");
+    let current_time = Utc::now();
     let diff = (current_time - last_rolled).num_minutes();
     if diff > config::ROLLTIME {
         let update_status = update_roll_time(user_id).await;
@@ -357,8 +362,8 @@ pub async fn check_inventory_time(user_id: String) -> Result<bool, String> {
     if raw_date == "ul" {
         return Ok(true);
     }
-    let last_rolled = Utc.datetime_from_str(raw_date.as_str(), "%Y-%m-%dT%H:%M:%SZ").expect("Invalid date").time();
-    let current_time = Utc::now().time();
+    let last_rolled = Utc.datetime_from_str(raw_date.as_str(), "%Y-%m-%dT%H:%M:%SZ").expect("Invalid date");
+    let current_time = Utc::now();
     let diff = (current_time - last_rolled).num_minutes();
     if diff > config::INVTIME {
         let update_status = update_inventory_time(user_id).await;
