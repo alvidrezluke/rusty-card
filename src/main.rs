@@ -45,8 +45,15 @@ struct General;
 
 #[tokio::main]
 async fn main() {
-    dotenv::dotenv().expect("Failed to load .env file");
+    let env = dotenv::dotenv();
+    match env {
+        Ok(_) => {
 
+        },
+        Err(_) => {
+            println!("Could not read dotenv file");
+        }
+    }
     tracing_subscriber::fmt::init();
 
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
@@ -63,7 +70,7 @@ async fn main() {
         Err(why) => panic!("Could not access application info: {:?}", why),
     };
 
-    let framework = StandardFramework::new().configure(|c| c.owners(owners).prefix("!")).group(&GENERAL_GROUP);
+    let framework = StandardFramework::new().configure(|c| c.owners(owners).prefix("~")).group(&GENERAL_GROUP);
 
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES

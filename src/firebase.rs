@@ -35,7 +35,6 @@ pub fn rm_quotes(value: String) -> String {
     
 pub async fn get_cards(category: String) -> Result<GeneratedCard, String> {
     let request_url = format!("https://firestore.googleapis.com/v1/projects/{}/databases/(default)/documents/cards/{}/cards?access_token={}", get_project_id(), category, get_token());
-
     let response = reqwest::get(request_url).await.unwrap();
     let text = response.text().await.unwrap();
     let v: Value = serde_json::from_str(text.as_str()).expect("Failed to parse JSON.");
